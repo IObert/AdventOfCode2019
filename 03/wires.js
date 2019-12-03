@@ -15,10 +15,6 @@ var helperMaps = {
     B: {}
 };
 
-function addVector(a, b) { //From https://stackoverflow.com/questions/7135874/element-wise-operations-in-javascript
-    return a.map((e, i) => e + b[i]);
-}
-
 function absoluteSum(akku, num) {
     if (num < 0) {
         num = -num;
@@ -32,25 +28,18 @@ function min(min, num) {
 }
 
 function convertSegment(segment) {
-    let parsed = {
-        length: +segment.slice(1)
-    }
-    switch (true) {
-        case segment.indexOf("R") === 0:
-            parsed.vector = [0, 1];
-            return parsed;
-        case segment.indexOf("L") === 0:
-            parsed.vector = [0, -1];
-            return parsed;
-        case segment.indexOf("U") === 0:
-            parsed.vector = [1, 0];
-            return parsed;
-        case segment.indexOf("D") === 0:
-            parsed.vector = [-1, 0];
-            return parsed;
-    }
+    const directionKey = segment[0];
+    var deltaVector = {
+        R: [0, 1],
+        L: [0, -1],
+        U: [1, 0],
+        D: [-1, 0]
+    };
+    return {
+        length: +segment.slice(1),
+        addVector: (location) => location.map((coordinate, i) => coordinate + deltaVector[directionKey][i])
 
-    throw "Unknown segment: " + segment;
+    }
 }
 
 function calcVisitedNodes(route, id) {
@@ -61,11 +50,10 @@ function calcVisitedNodes(route, id) {
     route.map(convertSegment).forEach((move) => {
         for (let step = 0; step < move.length; step++) {
             takenSteps++;
-            currectLocation = addVector(currectLocation, move.vector);
+            currectLocation = move.addVector(currectLocation);
             let location = currectLocation.join(',');
             path.add(location); //save as string to allow easy comparison
             helperMaps[id][location] = helperMaps[id][location] || takenSteps;
-
         }
     });
     return path;
