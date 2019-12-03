@@ -9,6 +9,7 @@ const testInput = [{
     wire2: ['U98', 'R91', 'D20', 'R16', 'D67', 'R40', 'U7', 'R15', 'U6', 'R7']
 }];
 const input = require('./input');
+var helperMaps;
 
 function addVector(a, b) { //From https://stackoverflow.com/questions/7135874/element-wise-operations-in-javascript
     return a.map((e, i) => e + b[i]);
@@ -47,22 +48,27 @@ function convertSegment(segment) {
     }
 }
 
-function calcVisitedNodes(route) {
+function calcVisitedNodes(route, id) {
     let currectLocation = [0, 0];
+    let takenSteps = 0;
     let path = new Set([]);
 
     route.map(convertSegment).forEach((move) => {
         for (let step = 0; step < move.length; step++) {
+            takenSteps++;
             currectLocation = addVector(currectLocation, move.vector);
-            path.add(currectLocation.join(',')); //save as string to allow easy comparison
+            let location = currectLocation.join(',');
+            path.add(location); //save as string to allow easy comparison
+            helperMaps[id][location] = helperMaps[id][location] || takenSteps;
+
         }
     });
     return path;
 }
 
 function findIntersections(wire1, wire2) {
-    const path1 = calcVisitedNodes(wire1);
-    const path2 = calcVisitedNodes(wire2);
+    const path1 = calcVisitedNodes(wire1, 'A');
+    const path2 = calcVisitedNodes(wire2, 'B');
     const intersections = new Set(
         [...path1].filter(x => path2.has(x)));
 
@@ -75,12 +81,29 @@ function calcManhattenDist(input) {
         .reduce(absoluteSum, 0)
 }
 
+function findClosestIntersectionPart1(wires) {
 
-function findClosestIntersection(wires) {
+    helperMaps = { //reset helper map
+        A: {},
+        B: {}
+    };
+
     const intersections = findIntersections(wires.wire1, wires.wire2)
     return [...intersections].map(calcManhattenDist).reduce(min);
 }
 
 
-console.log(testInput.map(findClosestIntersection));
-console.log(findClosestIntersection(input));
+function calcStepDist(input) {
+    return helperMaps.A[input] + helperMaps.B[input];
+}
+
+function findClosestIntersectionPart2(wires) {
+    const intersections = findIntersections(wires.wire1, wires.wire2)
+    return [...intersections].map(calcStepDist).reduce(min);
+}
+
+console.log(testInput.map(findClosestIntersectionPart1));
+console.log(findClosestIntersectionPart1(input));
+
+console.log(testInput.map(findClosestIntersectionPart2));
+console.log(findClosestIntersectionPart2(input));
