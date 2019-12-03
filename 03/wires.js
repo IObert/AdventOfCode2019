@@ -9,7 +9,11 @@ const testInput = [{
     wire2: ['U98', 'R91', 'D20', 'R16', 'D67', 'R40', 'U7', 'R15', 'U6', 'R7']
 }];
 const input = require('./input');
-var helperMaps;
+
+var helperMaps = {
+    A: {},
+    B: {}
+};
 
 function addVector(a, b) { //From https://stackoverflow.com/questions/7135874/element-wise-operations-in-javascript
     return a.map((e, i) => e + b[i]);
@@ -44,8 +48,9 @@ function convertSegment(segment) {
         case segment.indexOf("D") === 0:
             parsed.vector = [-1, 0];
             return parsed;
-            throw "Unknown segment: " + segment;
     }
+
+    throw "Unknown segment: " + segment;
 }
 
 function calcVisitedNodes(route, id) {
@@ -81,29 +86,22 @@ function calcManhattenDist(input) {
         .reduce(absoluteSum, 0)
 }
 
-function findClosestIntersectionPart1(wires) {
-
-    helperMaps = { //reset helper map
-        A: {},
-        B: {}
-    };
-
-    const intersections = findIntersections(wires.wire1, wires.wire2)
-    return [...intersections].map(calcManhattenDist).reduce(min);
-}
-
-
 function calcStepDist(input) {
     return helperMaps.A[input] + helperMaps.B[input];
 }
 
-function findClosestIntersectionPart2(wires) {
+function findNearestIntersection(wires) {
+    const intersections = findIntersections(wires.wire1, wires.wire2)
+    return [...intersections].map(calcManhattenDist).reduce(min);
+}
+
+function findClosestIntersection(wires) {
     const intersections = findIntersections(wires.wire1, wires.wire2)
     return [...intersections].map(calcStepDist).reduce(min);
 }
 
-console.log(testInput.map(findClosestIntersectionPart1));
-console.log(findClosestIntersectionPart1(input));
+console.log(testInput.map(findNearestIntersection));
+console.log(findNearestIntersection(input));
 
-console.log(testInput.map(findClosestIntersectionPart2));
-console.log(findClosestIntersectionPart2(input));
+console.log(testInput.map(findClosestIntersection));
+console.log(findClosestIntersection(input));
