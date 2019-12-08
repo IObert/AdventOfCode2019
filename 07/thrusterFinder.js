@@ -1,16 +1,49 @@
 const { execute } = require('./intMachine');
 
-function findMaxThruster(program, phases) {
+function arrayToIterator(arr) {
+    return Array.prototype.pop.bind(arr);
+}
+
+async function findMaxThrusterA(program, phases) {
     var max = 0;
 
     for (let prevOutput = 0; prevOutput <= 100; prevOutput++) {
-        phases.forEach(input => {
-            prevOutput = execute(program, [prevOutput, input])
-        });
+        for (let phase = 0; phase < phases.length; phase++) {
+            await execute(program.slice(0), 0, arrayToIterator([prevOutput, phases[phase]]))
+                .then(res => prevOutput = res.output);
+        }
 
         max = max < prevOutput ? prevOutput : max
     }
     return max;
+}
+
+async function findMaxThrusterB(program, phases, init) {
+    let currentAmp = 0, terminated = false;
+    const amplifiers = [program.slice(0), program.slice(0), program.slice(0), program.slice(0), program.slice(0)];
+    const pointers = [0, 0, 0, 0, 0];
+    const input = phases.map((element) => [element]);
+    let counter;
+
+    input[currentAmp] = [0, ...input[currentAmp]];
+
+    while (!terminated) {
+        await execute(amplifiers[currentAmp], pointers[currentAmp], arrayToIterator(input[currentAmp]))
+            .then(res => {
+                terminated = res.terminated && currentAmp === 4;
+                input[currentAmp] = [];
+                pointers[currentAmp] = res.pointer;
+
+                let nextAmp = (currentAmp + 1) % 5;
+                input[nextAmp] = [res.output, ...input[nextAmp]];
+                counter = res.output || counter;
+
+                currentAmp = nextAmp;
+
+            });
+
+    }
+    return counter;
 }
 
 function perm(xs) { //from https://stackoverflow.com/questions/37579994/generate-permutations-of-javascript-array
@@ -31,6 +64,7 @@ function perm(xs) { //from https://stackoverflow.com/questions/37579994/generate
 }
 
 module.exports = {
-    findMaxThruster: findMaxThruster,
+    findMaxThrusterA: findMaxThrusterA,
+    findMaxThrusterB: findMaxThrusterB,
     getPermutations: perm
 }
